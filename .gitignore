@@ -1,0 +1,87 @@
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*
+
+
+# third party libraries
+base*
+bed*
+*ordlist*
+hstats*
+
+# Mac debris
+.DS_Store
+
+# vi debris
+*.swp
+*.swo
+*.sw[mn]
+*.*~
+*~
+
+# LateX debris
+*.aux
+*.dvi
+*.pdf
+*.ps
+*.toc
+
+#BibTex debris
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+
+#others
+*.log
+*.out
+
+*.pyg
+
+*.png
+*.png.bb
+_minted-capital
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.app
+
+# Initial AutoStruct settings
+*.svn
+*.[oa]
+*.pro
+*.mak
+
+#stack
+*.yaml.lock
