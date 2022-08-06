@@ -1,0 +1,49 @@
+\documentclass[fontsize=11pt,paper=a4,pagesize=auto]{scrbook}
+\usepackage[backend=biber,style=authoryear,autocite=inline]{biblatex}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[greek,french, german, english]{babel}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{hyperxmp}
+\usepackage{graphicx}
+\usepackage{epigraph}
+\usepackage{hyperref}
+\usepackage{minted}
+\usepackage{pdfpages} 
+\usepackage{newpxtext,newpxmath}
+\usepackage{csquotes}
+\renewcommand{\mathsterling}{\text{\normalfont\itshape\textsterling}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\DeclareGraphicsRule{.png}{png}{.png.bb}{}
+\hypersetup{
+    pdfcopyright = {
+        Copyright (C) 2022 by Christos Korras
+        All rights reserved.
+    }
+    pdflicenseurl = {}
+}
+\frenchspacing
+
+\addbibresource{autostruct.bib}
+
+
+\begin{document}
+\title{Code Patterns}
+\subtitle{Code Extracts from AutoStruct}
+\author{Christos Korras}
+\date{}
+\maketitle
+\tableofcontents
+\include{architecture}
+\appendix
+\part{Appendix}
+\include{appendix}
+
+\printbibliography[title={Bibliography}]
+
+
+
+\end{document}
+
