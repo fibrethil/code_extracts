@@ -85,3 +85,7 @@ _minted-capital
 
 #stack
 *.yaml.lock
+
+#minted
+*.pygtex
+*.pygstyle

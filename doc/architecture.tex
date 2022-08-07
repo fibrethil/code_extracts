@@ -1,3 +1,61 @@
 \chapter{Architecture}
+\section{AutoStruct}
+\paragraph{}
+AutoStruct is a CAD system that designs buildings' structural elements as they compose together to form the entire structure. The user may either design the floors from scratch\footnote{implemented}, or she can import them from third-party systems like Revit\textsuperscript{Autodesk, Inc}, AutoCad\textsuperscript{Autodesk, Inc}, etc\footnote{not implemented}. 
+\paragraph{}
+AutoStruct consists of various processes that communicate to each other either through inter-process channels if they run in the same machine, or through various TCP/IP based network protocols if they run on different ones. They are both built on Qt's process and network\footnote{not implemented} libraries. Git infrastructure is also heavily used\footnote{not implemented} for multi-user work load distribution, control, review, version control, etc.
+\paragraph{}
+AutoStruct runs by default on eight threads\footnote{main plus seven, declared in the file, states/autostructmanager/autostructmanager\_statemachine.cpp, lines: 83-105} that administer the diverse workloads.
+\begin{minted}{cpp}
+            QThread* m_pqPyThread   {nullptr};
+            QThread* m_pqAlgsServerThread   {nullptr};
+            QThread* m_pqDistrAlgsServerThread   {nullptr};
+            QThread* m_pqDbThread   {nullptr};
+            QThread* m_pqNetServerThread   {nullptr};
+            QThread* m_pqStdOutServerThread   {nullptr};
+            QThread* m_pqStdErrServerThread   {nullptr};
+
+            python::setup::setup_Main* m_pPythonMain    {nullptr};
+            algs::strategy::strategy_Server* m_pAlgsServer   {nullptr};
+            algs::distributive::distributive_Server* m_pDistrAlgsServer   {nullptr};
+            db::vars::vars_DbInstance* m_pDbInstance    {nullptr};
+            io::network::network_Server* m_pNetServer   {nullptr};
+            io::stdoutput::stdoutput_Server* m_pStdOutServer   {nullptr};
+            io::stderror::stderror_Server* m_pStdErrServer   {nullptr};
+
+            threads::registry::registry_MFCommandLineSender::type m_PyThreadAddress;
+            threads::registry::registry_MFAlgsSender::type m_AlgsThreadAddress;
+            threads::registry::registry_MFDistrAlgsSender::type m_DistrAlgsThreadAddress;
+            threads::registry::registry_MFDbInstanceSender::type m_DbThreadAddress;
+            threads::registry::registry_MFNetSender::type m_NetThreadAddress;
+            threads::registry::registry_MFStdOutSender::type m_StdOutThreadAddress;
+            threads::registry::registry_MFStdErrSender::type m_StdErrThreadAddress;
+\end{minted}
+\paragraph{}
+The main thread accomodates CAD operations.
+\paragraph{}
+Python server hosts the interpreter that sustains the services that numpy, pandas, scipy, tensor flow, keras, etc libraries offer.
+\paragraph{}
+Algorithms Server Thread manages the interprocess communications with AutoStructCalcs and AutoStructRc, two Haskell services that generate the diverse structural models the application supports, and the StructSolver Fortran High Performance Computing service that takes care of the Finite Elements Analysis computations.
+\paragraph{}
+Distributive Algorithms Server allocates algorithmic workloads to external servers\footnote{not implemented}.
+\paragraph{}
+The database thread manages proprietary local storage and the sqlite\footnote{not implemented} administrative database.
+\paragraph{}
+The Net Server Thread accomodate all the TCP/IP based traffic\footnote{not implemented}.
+\paragraph{}
+The Std Output and Error threads deal with the log files.
+\paragraph{}
+The state machine provides the states' hierarchies that control user interactions. It is based on the Qt's state machine framework.
 \section{Physical Design}
 \paragraph{}
+The code base is massive, having being developed for over 20 years. It is built on the principles that J. Lakos documented in his books\footnote{J. Lakos, Large Scale C++ Software Design, Addison-Wesley, 1996}\footnote{J. Lakos, Large Scale C++ Volume I, Process and Architecture, Addison-Wesley, 2020}, and sustain the BDE Bloomberg libraries\footnote{https://github.com/bloomberg/bde}. 
+\paragraph{}
+Loose, orthogonal to each other components. Layered layouts. No cyclic references. Event driven communication. Pimpled components.
+\section{Logical Design}
+\paragraph{}
+Object oriented design. Lays heavily on encapsulation, inheritance and polymorphism. Qt framework patterns inform its logical design decisions. Uses adapted GOF\footnote{E. Gamma, R. Helm, R. Johnson, J. Vlissides, Design Patterns, Addison-Wesley, 1995} design patterns.
+\section{Deprecated Header Redundant Include Guards}
+\paragraph{}
+AutoStruct components (.h, .cpp) are generated automatically by python scripts that were written targeting the pre-processors of the nineties. Although the parts of these scripts that are addressing the pimpl idiom have been updated, the parts that deal with the included header files are left in their initial form.
+
