@@ -1,4 +1,13 @@
 \chapter{Architecture}
+\section{Scope}
+\paragraph{}
+AutoStruct's code base is massive, as it has been developed for over 20 years, mostly on weekends. Its purpose is for me to practice and experiment on new technologies. Nevertheless, it is complete in the functionalities I was developing. Although a spare time project, it may very well form the basis for an open source project that may deliver substance in the domain of the structural engineers.
+\paragraph{}
+I compiled a set of files to provide an idea of my favourite development style and idioms. They form a directory structure that reflects the libraries they belong to.
+\paragraph{}
+In this text I attempt to give some context for the source files I am sending. They provide snippets from the state machine, threads, data model and store functionalities. I didn't include at all any sample of the front end functionality, as I thought that the role in BnpParibas does not have any interest for front end user experience functionalities.
+\paragraph{}
+I would be more than glad to discuss any of these, if you tell me otherwise. We can also explore together the whole code base if it something that may be of interest to you.
 \section{AutoStruct}
 \paragraph{}
 AutoStruct is a CAD system that designs buildings' structural elements as they compose together to form the entire structure. The user may either design the floors from scratch\footnote{implemented}, or she can import them from third-party systems like Revit\textsuperscript{Autodesk, Inc}, AutoCad\textsuperscript{Autodesk, Inc}, etc\footnote{not implemented}. 
@@ -7,29 +16,29 @@ AutoStruct consists of various processes that communicate to each other either t
 \paragraph{}
 AutoStruct runs by default on eight threads\footnote{main plus seven, declared in the file, states/autostructmanager/autostructmanager\_statemachine.cpp, lines: 83-105} that administer the diverse workloads.
 \begin{minted}{cpp}
-            QThread* m_pqPyThread   {nullptr};
-            QThread* m_pqAlgsServerThread   {nullptr};
-            QThread* m_pqDistrAlgsServerThread   {nullptr};
-            QThread* m_pqDbThread   {nullptr};
-            QThread* m_pqNetServerThread   {nullptr};
-            QThread* m_pqStdOutServerThread   {nullptr};
-            QThread* m_pqStdErrServerThread   {nullptr};
+QThread* m_pqPyThread   {nullptr};
+QThread* m_pqAlgsServerThread   {nullptr};
+QThread* m_pqDistrAlgsServerThread   {nullptr};
+QThread* m_pqDbThread   {nullptr};
+QThread* m_pqNetServerThread   {nullptr};
+QThread* m_pqStdOutServerThread   {nullptr};
+QThread* m_pqStdErrServerThread   {nullptr};
 
-            python::setup::setup_Main* m_pPythonMain    {nullptr};
-            algs::strategy::strategy_Server* m_pAlgsServer   {nullptr};
-            algs::distributive::distributive_Server* m_pDistrAlgsServer   {nullptr};
-            db::vars::vars_DbInstance* m_pDbInstance    {nullptr};
-            io::network::network_Server* m_pNetServer   {nullptr};
-            io::stdoutput::stdoutput_Server* m_pStdOutServer   {nullptr};
-            io::stderror::stderror_Server* m_pStdErrServer   {nullptr};
+python::setup::setup_Main* m_pPythonMain    {nullptr};
+algs::strategy::strategy_Server* m_pAlgsServer   {nullptr};
+algs::distributive::distributive_Server* m_pDistrAlgsServer   {nullptr};
+db::vars::vars_DbInstance* m_pDbInstance    {nullptr};
+io::network::network_Server* m_pNetServer   {nullptr};
+io::stdoutput::stdoutput_Server* m_pStdOutServer   {nullptr};
+io::stderror::stderror_Server* m_pStdErrServer   {nullptr};
 
-            threads::registry::registry_MFCommandLineSender::type m_PyThreadAddress;
-            threads::registry::registry_MFAlgsSender::type m_AlgsThreadAddress;
-            threads::registry::registry_MFDistrAlgsSender::type m_DistrAlgsThreadAddress;
-            threads::registry::registry_MFDbInstanceSender::type m_DbThreadAddress;
-            threads::registry::registry_MFNetSender::type m_NetThreadAddress;
-            threads::registry::registry_MFStdOutSender::type m_StdOutThreadAddress;
-            threads::registry::registry_MFStdErrSender::type m_StdErrThreadAddress;
+threads::registry::registry_MFCommandLineSender::type m_PyThreadAddress;
+threads::registry::registry_MFAlgsSender::type m_AlgsThreadAddress;
+threads::registry::registry_MFDistrAlgsSender::type m_DistrAlgsThreadAddress;
+threads::registry::registry_MFDbInstanceSender::type m_DbThreadAddress;
+threads::registry::registry_MFNetSender::type m_NetThreadAddress;
+threads::registry::registry_MFStdOutSender::type m_StdOutThreadAddress;
+threads::registry::registry_MFStdErrSender::type m_StdErrThreadAddress;
 \end{minted}
 \paragraph{}
 The main thread accomodates CAD operations.
@@ -42,14 +51,14 @@ Distributive Algorithms Server allocates algorithmic workloads to external serve
 \paragraph{}
 The database thread manages proprietary local storage and the sqlite\footnote{not implemented} administrative database.
 \paragraph{}
-The Net Server Thread accomodate all the TCP/IP based traffic\footnote{not implemented}.
+The Net Server thread accomodates all the TCP/IP based traffic\footnote{not implemented}.
 \paragraph{}
 The Std Output and Error threads deal with the log files.
 \paragraph{}
 The state machine provides the states' hierarchies that control user interactions. It is based on the Qt's state machine framework.
 \section{Physical Design}
 \paragraph{}
-The code base is massive, having being developed for over 20 years. It is built on the principles that J. Lakos documented in his books\footnote{J. Lakos, Large Scale C++ Software Design, Addison-Wesley, 1996}\footnote{J. Lakos, Large Scale C++ Volume I, Process and Architecture, Addison-Wesley, 2020}, and sustain the BDE Bloomberg libraries\footnote{https://github.com/bloomberg/bde}. 
+It is built on the principles that J. Lakos documented in his books\footnote{J. Lakos, Large Scale C++ Software Design, Addison-Wesley, 1996}\footnote{J. Lakos, Large Scale C++ Volume I, Process and Architecture, Addison-Wesley, 2020}, and sustain the BDE Bloomberg libraries\footnote{https://github.com/bloomberg/bde}. 
 \paragraph{}
 Loose, orthogonal to each other components. Layered layouts. No cyclic references. Event driven communication. Pimpled components.
 \section{Logical Design}
@@ -58,4 +67,230 @@ Object oriented design. Lays heavily on encapsulation, inheritance and polymorph
 \section{Deprecated Header Redundant Include Guards}
 \paragraph{}
 AutoStruct components (.h, .cpp) are generated automatically by python scripts that were written targeting the pre-processors of the nineties. Although the parts of these scripts that are addressing the pimpl idiom have been updated, the parts that deal with the included header files are left in their initial form.
+\section{Threads}
+\paragraph{}
+AutoStruct has deprived QThread(s) from their own infinite loops that process inter-thread interactions through the asynchronous mode of the signal/slot mechanism. Instead, it has opted for an adapted form of the message passing oriented actor model, that A. Williams documents in his book\footnote{A. Williams, C++ Concurrency in Action, Manning, First Edition, 2012, pp.97-102, 342-359}
+\paragraph{}
+The file algs/distributive/distributive\_server.cpp, in lines 155-173,
+\begin{minted}{cpp}
+    void distributive_Server::distributive_ServerImpl01::m_vRun()   {
+		Q_ASSERT(m_pServer);
 
+        m_fState = &distributive_Server::distributive_ServerImpl01::m_vProcessEventState;
+        try {
+            for (;;)  {
+                (this->*m_fState)();
+            }
+        }
+        catch(threads::messages::messages_CloseQueue const&) {
+            std::cout
+                <<  "DistrAlgs thread is exiting!!!\n"
+            ;
+
+            m_pServer->deleteLater();
+        }
+    }
+\end{minted}
+and 215-369,
+\begin{minted}{cpp}
+void distributive_Server::distributive_ServerImpl01::m_vProcessEventState()   {
+  m_MailBox.wait()
+    .handle<distrmsgs::distrmsgs_LaunchProcessEvent>(
+      [this] (
+        distrmsgs::distrmsgs_LaunchProcessEvent const& airc_LaunchProcessEvent
+      ) {
+        auto l_qsApplication =  airc_LaunchProcessEvent.mc_qsGetApplication();
+        Q_ASSERT(!l_qsApplication.isEmpty());
+
+        auto l_qslArguments = airc_LaunchProcessEvent.mc_qslGetArguments();
+
+        auto l_qjoProcessInput = airc_LaunchProcessEvent.mc_qjoGetProcessInput();
+
+        auto l_pqCommand = airc_LaunchProcessEvent.mc_pqGetCommand();
+        Q_ASSERT(l_pqCommand);
+
+        qDebug(logDebug).noquote()
+            <<  "the programs we are going to launch is: " + l_qsApplication
+            <<  "the arguments are: " + l_qslArguments.join("/")
+            <<  "the data input is: "
+                    + QString(QJsonDocument(l_qjoProcessInput).toJson())
+        ;
+
+        this->m_spLaunchProcessEvent = std::make_shared<
+                distrmsgs::distrmsgs_LaunchProcessEvent
+            >(
+                l_qsApplication,
+                l_qslArguments,
+                l_qjoProcessInput,
+                l_pqCommand
+            )
+        ;
+        m_fState =
+            &distributive_Server::distributive_ServerImpl01::m_vLaunchProcessState
+        ;
+      }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessOutputEvent>(
+        [this] (
+            distrmsgs::distrmsgs_ProcessOutputEvent const& airc_ProcessOutputEvent
+        ) {
+            auto l_qsApplication =  airc_ProcessOutputEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_qjoOutput = airc_ProcessOutputEvent.mc_qjoGetOutput();
+
+            auto l_pqCommand = airc_ProcessOutputEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            this->m_spProcessOutputEvent = std::make_shared<
+                    distrmsgs::distrmsgs_ProcessOutputEvent
+                >(
+                    l_qsApplication,
+                    l_qjoOutput,
+                    l_pqCommand
+                )
+            ;
+            m_fState =
+                &distributive_Server::distributive_ServerImpl01::m_vProcessOutputState
+            ;
+        }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessErrorEvent>(
+        [this] (
+            distrmsgs::distrmsgs_ProcessErrorEvent const& airc_ProcessErrorEvent
+        ) {
+            Q_ASSERT(m_pServer);
+            Q_ASSERT(m_pAutoStructCalcsManager);
+
+            auto l_qsApplication =  airc_ProcessErrorEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_qjoError = airc_ProcessErrorEvent.mc_qjoGetError();
+
+            auto l_pqCommand = airc_ProcessErrorEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            m_pAutoStructCalcsManager->m_vProcessError(
+                l_qsApplication, l_qjoError, l_pqCommand
+            );
+
+            Q_EMIT m_pServer->signal_vProcessError(l_qsApplication, l_qjoError, l_pqCommand);
+        }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessStartedEvent>(
+        [this] (
+            distrmsgs::distrmsgs_ProcessStartedEvent const& airc_ProcessStartedEvent
+        ) {
+            Q_ASSERT(m_pServer);
+
+            auto l_qsApplication =  airc_ProcessStartedEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_qjoStarted = airc_ProcessStartedEvent.mc_qjoGetStarted();
+
+            auto l_pqCommand = airc_ProcessStartedEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            m_pAutoStructCalcsManager->m_vProcessStarted(
+                l_qsApplication, l_qjoStarted
+            );
+
+            Q_EMIT m_pServer->signal_vProcessStarted(l_qsApplication, l_pqCommand);
+        }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessFinishedEvent>(
+        [this] (
+            distrmsgs::
+                distrmsgs_ProcessFinishedEvent const& airc_ProcessFinishedEvent
+        ) {
+            Q_ASSERT(m_pServer);
+            Q_ASSERT(m_pAutoStructCalcsManager);
+
+            auto l_qsApplication = airc_ProcessFinishedEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_qjoFinished = airc_ProcessFinishedEvent.mc_qjoGetFinished();
+
+            auto l_pqCommand = airc_ProcessFinishedEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            m_pAutoStructCalcsManager->m_vProcessFinished(
+                l_qsApplication, l_qjoFinished, l_pqCommand
+            );
+
+            Q_EMIT m_pServer->signal_vProcessFinished(
+                l_qsApplication, l_qjoFinished, l_pqCommand
+            );
+        }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessProgressEvent>(
+        [this] (
+            distrmsgs::
+                distrmsgs_ProcessProgressEvent const& airc_ProcessProgressEvent
+        ) {
+            auto l_qsApplication = airc_ProcessProgressEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_dProgress =  airc_ProcessProgressEvent.mc_dGetProgress();
+
+            auto l_pqCommand = airc_ProcessProgressEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            Q_EMIT m_pServer->signal_vProcessProgress(
+                l_qsApplication, l_dProgress, l_pqCommand
+            );
+        }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessCancelEvent>(
+        [this] (distrmsgs::distrmsgs_ProcessCancelEvent const& airc_ProcessCancelEvent) {
+            auto l_qsApplication = airc_ProcessCancelEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_pqCommand = airc_ProcessCancelEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            this->m_spProcessCancelEvent = std::make_shared<
+                    distrmsgs::distrmsgs_ProcessCancelEvent
+                >(
+                    l_qsApplication,
+                    l_pqCommand
+                )
+            ;
+            m_fState = 
+                &distributive_Server::distributive_ServerImpl01::m_vProcessCancelState
+            ;
+        }
+    )
+    .handle<distrmsgs::distrmsgs_ProcessCanceledEvent>(
+        [this] (
+            distrmsgs::distrmsgs_ProcessCanceledEvent const& airc_ProcessCanceledEvent
+        ) {
+            Q_ASSERT(m_pServer);
+            Q_ASSERT(m_pAutoStructCalcsManager);
+
+            auto l_qsApplication = airc_ProcessCanceledEvent.mc_qsGetApplication();
+            Q_ASSERT(!l_qsApplication.isEmpty());
+
+            auto l_pqCommand = airc_ProcessCanceledEvent.mc_pqGetCommand();
+            Q_ASSERT(l_pqCommand);
+
+            m_pAutoStructCalcsManager->m_vProcessCanceled(
+                l_qsApplication, QJsonObject(), l_pqCommand
+            );
+
+            Q_EMIT m_pServer->signal_vProcessCanceled(
+                l_qsApplication, l_pqCommand
+            );
+        }
+    )
+  ;
+}
+
+\end{minted}
+consists the recipient part of the algorithms thread that receives, processes, and forwards the messages to the manager of the the inter-process communication between AutoStruct, AutoStructCalcs, AutoStructRc, and StructSolvers, namely the distributive\_AutoStructCalcsManager component. The latter responds on the outcomes by sending messages to various threads, like the output, or the error, or the main threads, via their send method\footnote{for instance, in lines 482-484 in file algs/distributive/distributive\_autostructcalcsmanager.cpp}
+\section{Data Model}
+\paragraph{}
+The component db::beams::beams\_Beam is an example of a beam's data model. It serializes/deserializes both in binary and json. Its proxy, models::dbproxy::dbproxy\_Beam, supports both the cad system operations, and their output in spreadsheet and/or tree visual editors.
+\section{Save Action}
+\paragraph{}
+The componenet transitions::filescenetransitions::filescenetransitions\_ToSaveFileTransition manages the saving process which is performed by the db thread.
