@@ -1,13 +1,13 @@
 \chapter{Architecture}
 \section{Scope}
 \paragraph{}
-AutoStruct's code base is massive, as it has been developed for over 20 years, mostly on weekends. Its purpose is for me to practice and experiment on new technologies. Nevertheless, it is complete in the functionalities I was developing. Although a spare time project, it may very well form the basis for an open source project that may deliver substance in the domain of the structural engineers.
+AutoStruct's code base is massive, as it has been developed for over 20 years, mostly on weekends. Its purpose is for me to practice and experiment on new technologies. Nevertheless, it is complete in the functionalities I was developing. Although a spare time project, it may very well form the basis for an open source project that will deliver substance in the domain of the structural engineers.
 \paragraph{}
-I compiled a set of files to provide an idea of my favourite development style and idioms. They form a directory structure that reflects the libraries they belong to.
+I compiled a set of files to provide an idea of my favourite development style and idioms. They form a directory structure that reflects the libraries they belong to. I have not included files that concern with cad or front end gui functionalities, as I thought that the role does not have any interest in them.
 \paragraph{}
-In this text I attempt to give some context for the source files I am sending. They provide snippets from the state machine, threads, data model and store functionalities. I didn't include at all any sample of the front end functionality, as I thought that the role in BnpParibas does not have any interest for front end user experience functionalities.
+In this text I attempt to give some context for the source files I am sending. They provide snippets from the state machine, threads, data model and store functionalities.
 \paragraph{}
-I would be more than glad to discuss any of these, if you tell me otherwise. We can also explore together the whole code base if it something that may be of interest to you.
+I would be more than glad to discuss any of these in detail. We can also explore together the whole code base if it something that may be of interest to you.
 \section{AutoStruct}
 \paragraph{}
 AutoStruct is a CAD system that designs buildings' structural elements as they compose together to form the entire structure. The user may either design the floors from scratch\footnote{implemented}, or she can import them from third-party systems like Revit\textsuperscript{Autodesk, Inc}, AutoCad\textsuperscript{Autodesk, Inc}, etc\footnote{not implemented}. 
@@ -287,10 +287,13 @@ void distributive_Server::distributive_ServerImpl01::m_vProcessEventState()   {
 }
 
 \end{minted}
-consists the recipient part of the algorithms thread that receives, processes, and forwards the messages to the manager of the the inter-process communication between AutoStruct, AutoStructCalcs, AutoStructRc, and StructSolvers, namely the distributive\_AutoStructCalcsManager component. The latter responds on the outcomes by sending messages to various threads, like the output, or the error, or the main threads, via their send method\footnote{for instance, in lines 482-484 in file algs/distributive/distributive\_autostructcalcsmanager.cpp}
+contains the recipient part of the algorithms thread that receives, processes, and forwards the messages to the manager of the the inter-process communication between AutoStruct, AutoStructCalcs, AutoStructRc, and StructSolvers, namely the distributive\_AutoStructCalcsManager component. The latter responds on the processes' outcomes by sending messages to various threads, like the output, or the error, or the main threads, via their send method\footnote{for instance, in lines 482-484 in file algs/distributive/distributive\_autostructcalcsmanager.cpp}
 \section{Data Model}
 \paragraph{}
-The component db::beams::beams\_Beam is an example of a beam's data model. It serializes/deserializes both in binary and json. Its proxy, models::dbproxy::dbproxy\_Beam, supports both the cad system operations, and their output in spreadsheet and/or tree visual editors.
-\section{Save Action}
+The component db::beams::beams\_Beam is an example of a beam's data model. It serializes/deserializes both in binary for storage and json for communication. Its proxy, models::dbproxy::dbproxy\_Beam, supports both the cad system operations, and their output in spreadsheet and/or tree visual editors.
+\section{Storage Operation}
 \paragraph{}
-The componenet transitions::filescenetransitions::filescenetransitions\_ToSaveFileTransition manages the saving process which is performed by the db thread.
+The component transitions::filescenetransitions::filescenetransitions\_ToSaveFileTransition manages the binary storage process which is performed by the db thread.
+\section{Inter-Process Operations}
+\paragraph{}
+The component algs::distributive::distributive\_AutoStructCalcs implements and controls the AutoStructCalcs process lifecycle and feedbacks.
