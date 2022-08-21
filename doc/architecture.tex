@@ -1,18 +1,33 @@
 \chapter{Architecture}
 \section{Scope}
 \paragraph{}
-AutoStruct's code base is massive, as it has been developed for over 20 years, mostly on weekends. Its purpose is for me to practice and experiment on new technologies. Nevertheless, it is complete in the functionalities I was developing. Although a spare time project, it may very well form the basis for an open source project that will deliver substance in the domain of the structural engineers.
+AutoStruct's code base (github private repo) is massive, as it has been developed for over 20 years, mostly on weekends. From October 2020 until February 2022, AutoStruct was developed on a professional, daily basis.
 \paragraph{}
-I compiled a set of files to provide an idea of my favourite development style and idioms. They form a directory structure that reflects the libraries they belong to. I have not included files that concern with cad or front end gui functionalities, as I thought that the role does not have any interest in them.
+Its initial purpose was for me to practice and experiment on new technologies. Nevertheless, it is complete in the functionalities I am developing. It may very well form the basis for an open source, or commercial project that will deliver substance in the domain of the structural engineers.
 \paragraph{}
-In this text I attempt to give some context for the source files I am sending. They provide snippets from the state machine, threads, data model and store functionalities.
+I compiled a set of files to provide an idea of my favourite development style and idioms. They form a directory structure that reflects the libraries they belong to. I have not included files that concern with cad or front end gui functionalities yet.
 \paragraph{}
-I would be more than glad to discuss any of these in detail. We can also explore together the whole code base if it something that may be of interest to you.
+In this text I attempt to give some context for the source files I am exposing. They provide snippets from the state machine, threads, data model and store functionalities.
+\paragraph{}
+I would be more than glad to discuss any of these in detail. We can also explore together the whole code base if it something that may be of interest to the recipient.
+\section{Code Base Samples and Docs}
+\paragraph{}
+The sample code (src directory) and the LateX documentation (doc directory) can be cloned from github:
+\begin{itemize}
+\item git clone git@github.com:fibrethil/code\_extracts.git
+\item git checkout --track -b develop origin/develop
+\end{itemize}
+\paragraph{}
+LateX documentation produces with the command:
+\begin{itemize}
+\item \textbf{pdflatex --shell-escape autostruct.tex}
+\end{itemize}
+the current text.
 \section{AutoStruct}
 \paragraph{}
 AutoStruct is a CAD system that designs buildings' structural elements as they compose together to form the entire structure. The user may either design the floors from scratch\footnote{implemented}, or she can import them from third-party systems like Revit\textsuperscript{Autodesk, Inc}, AutoCad\textsuperscript{Autodesk, Inc}, etc\footnote{not implemented}. 
 \paragraph{}
-AutoStruct consists of various processes that communicate to each other either through inter-process channels if they run in the same machine, or through various TCP/IP based network protocols if they run on different ones. They are both built on Qt's process and network\footnote{not implemented} libraries. Git infrastructure is also heavily used\footnote{not implemented} for multi-user work load distribution, control, review, version control, etc.
+AutoStruct consists of various processes that communicate to each other either through inter-process channels if they run in the same machine, or through various TCP/IP based network protocols if they run on different ones. They are both built on Qt's process and network\footnote{not implemented} libraries. Git infrastructure, based on libgit2, is also heavily used\footnote{not implemented} for multi-user work load distribution, control, review, version control, etc.
 \paragraph{}
 AutoStruct runs by default on eight threads\footnote{main plus seven, declared in the file, states/autostructmanager/autostructmanager\_statemachine.cpp, lines: 83-105} that administer the diverse workloads.
 \begin{minted}{cpp}
@@ -151,7 +166,8 @@ void distributive_Server::distributive_ServerImpl01::m_vProcessEventState()   {
                 )
             ;
             m_fState =
-                &distributive_Server::distributive_ServerImpl01::m_vProcessOutputState
+                &distributive_Server::distributive_ServerImpl01::
+                    m_vProcessOutputState
             ;
         }
     )
@@ -174,12 +190,16 @@ void distributive_Server::distributive_ServerImpl01::m_vProcessEventState()   {
                 l_qsApplication, l_qjoError, l_pqCommand
             );
 
-            Q_EMIT m_pServer->signal_vProcessError(l_qsApplication, l_qjoError, l_pqCommand);
+            Q_EMIT m_pServer->signal_vProcessError(
+                        l_qsApplication, l_qjoError, l_pqCommand
+                    )
+                ;
         }
     )
     .handle<distrmsgs::distrmsgs_ProcessStartedEvent>(
         [this] (
-            distrmsgs::distrmsgs_ProcessStartedEvent const& airc_ProcessStartedEvent
+            distrmsgs::
+                distrmsgs_ProcessStartedEvent const& airc_ProcessStartedEvent
         ) {
             Q_ASSERT(m_pServer);
 
@@ -242,7 +262,10 @@ void distributive_Server::distributive_ServerImpl01::m_vProcessEventState()   {
         }
     )
     .handle<distrmsgs::distrmsgs_ProcessCancelEvent>(
-        [this] (distrmsgs::distrmsgs_ProcessCancelEvent const& airc_ProcessCancelEvent) {
+        [this] (
+            distrmsgs::
+                distrmsgs_ProcessCancelEvent const& airc_ProcessCancelEvent
+        ) {
             auto l_qsApplication = airc_ProcessCancelEvent.mc_qsGetApplication();
             Q_ASSERT(!l_qsApplication.isEmpty());
 
@@ -257,13 +280,15 @@ void distributive_Server::distributive_ServerImpl01::m_vProcessEventState()   {
                 )
             ;
             m_fState = 
-                &distributive_Server::distributive_ServerImpl01::m_vProcessCancelState
+                &distributive_Server::distributive_ServerImpl01::
+                    m_vProcessCancelState
             ;
         }
     )
     .handle<distrmsgs::distrmsgs_ProcessCanceledEvent>(
         [this] (
-            distrmsgs::distrmsgs_ProcessCanceledEvent const& airc_ProcessCanceledEvent
+            distrmsgs::
+                distrmsgs_ProcessCanceledEvent const& airc_ProcessCanceledEvent
         ) {
             Q_ASSERT(m_pServer);
             Q_ASSERT(m_pAutoStructCalcsManager);
